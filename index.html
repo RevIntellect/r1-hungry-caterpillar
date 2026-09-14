@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=240, height=282, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Hungry Caterpillar</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 240px; height: 282px; overflow: hidden; background: #16361a;
+      font-family: system-ui, sans-serif; color: #fff; touch-action: none;
+    }
+    canvas { display: block; width: 240px; height: 250px; background: #1d4a24; }
+    #bar {
+      height: 32px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 6px; background: #0f2412; font-size: 11px;
+    }
+    #score { color: #ffd56a; font-weight: 700; }
+    #msg { color: #c8f0c8; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="240" height="250"></canvas>
+  <div id="bar">
+    <span id="score">0</span>
+    <span id="msg">scroll / tap</span>
+  </div>
+  <script>
+    const W = 240, H = 250, GRID = 10;
+    const COLS = W / GRID, ROWS = Math.floor(H / GRID);
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const msgEl = document.getElementById('msg');
+    const FOOD = [
+      { name: 'apple',  emoji: '🍎', pts: 1 },
+      { name: 'pear',   emoji: '🍐', pts: 1 },
+      { name: 'grape',  emoji: '🍇', pts: 2 },
+      { name: 'carrot', emoji: '🥕', pts: 1 },
+      { name: 'broccoli', emoji: '🥦', pts: 2 },
+      { name: 'corn',   emoji: '🌽', pts: 1 },
+      { name: 'donut',  emoji: '🍩', pts: 3 }
+    ];
+    let snake, dir, nextDir, food, score, dead, tickMs, acc, last;
+    function reset() {
+      snake = [{ x: 8, y: 12 }, { x: 7, y: 12 }, { x: 6, y: 12 }];
+      dir = { x: 1, y: 0 };
+      nextDir = { x: 1, y: 0 };
+      score = 0; dead = false; tickMs = 180;
+      spawnFood(); scoreEl.textContent = '0'; msgEl.textContent = 'eat!';
+    }
+    function occupied(x, y) { return snake.some(s => s.x === x && s.y === y); }
+    function spawnFood() {
+      let x, y, n = 0;
+      do {
+        x = 1 + Math.floor(Math.random() * (COLS - 2));
+        y = 1 + Math.floor(Math.random() * (ROWS - 2));
+      } while (occupied(x, y) && ++n < 80);
+      food = { x, y, ...FOOD[Math.floor(Math.random() * FOOD.length)] };
+    }
+    function turn(nx, ny) {
+      if (dead) { reset(); return; }
+      if (nx === -dir.x && ny === -dir.y) return;
+      nextDir = { x: nx, y: ny };
+    }
+    function step() {
+      if (dead) return;
+      dir = nextDir;
+      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+      if (head.x < 0 || head.y < 0 || head.x >= COLS || head.y >= ROWS || occupied(head.x, head.y)) {
+        dead = true; msgEl.textContent = 'tap restart'; return;
+      }
+      snake.unshift(head);
+      if (head.x === food.x && head.y === food.y) {
+        score += food.pts; scoreEl.textContent = String(score);
+        if (tickMs > 90) tickMs -= 4;
+        spawnFood();
+      } else snake.pop();
+    }
+    function draw() {
+      ctx.fillStyle = '#1d4a24'; ctx.fillRect(0, 0, W, H);
+      snake.forEach((s, i) => {
+        const px = s.x * GRID, py = s.y * GRID;
+        if (i === 0) {
+          ctx.fillStyle = '#3dcc4a';
+          ctx.beginPath(); ctx.roundRect(px + 1, py + 1, GRID - 2, GRID - 2, 4); ctx.fill();
+          ctx.fillStyle = '#16361a';
+          const ex = dir.x !== 0 ? (dir.x > 0 ? 6 : 2) : 4;
+          const ey = dir.y !== 0 ? (dir.y > 0 ? 6 : 2) : 3;
+          ctx.fillRect(px + ex, py + ey, 2, 2);
+          ctx.fillRect(px + ex + (dir.y !== 0 ? 3 : 0), py + ey + (dir.x !== 0 ? 3 : 0), 2, 2);
+        } else {
+          ctx.fillStyle = (i / snake.length) < 0.5 ? '#6fe05a' : '#c9e85a';
+          ctx.beginPath(); ctx.roundRect(px + 2, py + 2, GRID - 4, GRID - 4, 3); ctx.fill();
+        }
+      });
+      ctx.font = '12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(food.emoji, food.x * GRID + GRID / 2, food.y * GRID + GRID / 2 + 1);
+      if (dead) {
+        ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, 90, W, 50);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px system-ui';
+        ctx.fillText('full tummy', W / 2, 108);
+        ctx.font = '11px system-ui'; ctx.fillText('score ' + score + ' · tap', W / 2, 126);
+      }
+    }
+    function loop(ts) {
+      if (!last) last = ts; acc += ts - last; last = ts;
+      while (acc >= tickMs) { step(); acc -= tickMs; }
+      draw(); requestAnimationFrame(loop);
+    }
+    canvas.addEventListener('click', (e) => {
+      if (dead) { reset(); return; }
+      const r = canvas.getBoundingClientRect();
+      const x = (e.clientX - r.left) * (W / r.width);
+      const y = (e.clientY - r.top) * (H / r.height);
+      const hx = snake[0].x * GRID + GRID / 2, hy = snake[0].y * GRID + GRID / 2;
+      if (Math.abs(x - hx) > Math.abs(y - hy)) turn(x > hx ? 1 : -1, 0);
+      else turn(0, y > hy ? 1 : -1);
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'VolumeUp') turn(0, -1);
+      if (e.key === 'ArrowDown' || e.key === 'VolumeDown') turn(0, 1);
+      if (e.key === 'ArrowLeft') turn(-1, 0);
+      if (e.key === 'ArrowRight') turn(1, 0);
+      if ((e.key === 'Enter' || e.key === ' ') && dead) reset();
+    });
+    window.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (dead) { reset(); return; }
+      if (dir.x !== 0) turn(0, e.deltaY < 0 ? -1 : 1);
+      else turn(e.deltaY < 0 ? -1 : 1, 0);
+    }, { passive: false });
+    acc = 0; last = 0; reset(); requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
