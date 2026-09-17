@@ -10,7 +10,7 @@ Ultra overnight handoff. Next session starts here. Do not invent scope.
 | Repo | [RevIntellect/r1-hungry-caterpillar](https://github.com/RevIntellect/r1-hungry-caterpillar) |
 | Base | `main` |
 | Branch | `cursor/pages-handoff-62b6` |
-| PR | Open, **do not merge** (URL on the GitHub PR) |
+| PR | https://github.com/RevIntellect/r1-hungry-caterpillar/pull/1 — **do not merge** |
 | Owner tonight | None. Aaron does not need to enable Pages or merge. |
 | Secrets | None. Do not add any. |
 
@@ -77,9 +77,13 @@ Or open `index.html` via `file://`.
 
 ## Verification
 
+Done locally on 2026-09-17 against `python3 -m http.server 8000`:
+
 - `index.html` has no `src="/…"` or `href="/…"` asset paths.
-- Local server: start overlay visible, click/Enter starts, arrows steer, eat increments score, wall/self shows “full tummy”, tap/Enter restarts.
-- Overlay stays inside the 240×282 frame on a wide desktop window.
+- `/` and `/index.html` both serve the same game.
+- Start overlay on-board → Enter starts → arrows steer → ate food (score 0→2) → wall death shows “full tummy” on-board → Enter restarts.
+- Frame stays centered on a wide desktop window.
+- Browser requested `/favicon.ico` (default; none shipped). Harmless 404, not a game asset. Do not add a favicon unless asked.
 
 ## Next human (after sleep)
 
