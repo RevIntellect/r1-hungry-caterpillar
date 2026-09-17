@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=240, initial-scale=1.0, user-scalable=no">
+<meta name="description" content="Hungry Caterpillar — a self-contained Rabbit R1 snake-style game. Play in the browser or on device.">
 <title>Hungry Caterpillar</title>
 <style>
-html,body{margin:0;width:240px;height:282px;overflow:hidden;background:#16361a;font-family:sans-serif;color:#fff}
+html,body{margin:0;min-height:100%;background:#16361a;font-family:sans-serif;color:#fff}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center}
+#app{position:relative;width:240px;height:282px;overflow:hidden;background:#16361a}
 #g{width:240px;height:250px;display:block;background:#1d4a24}
 #bar{height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:#0f2412;font-size:12px}
 #sc{color:#ffd56a;font-weight:700}
@@ -13,9 +16,11 @@ html,body{margin:0;width:240px;height:282px;overflow:hidden;background:#16361a;f
 </style>
 </head>
 <body>
+<div id="app">
 <canvas id="g" width="240" height="250"></canvas>
 <div id="bar"><span id="sc">0</span><span id="ms">tap / scroll</span></div>
 <div id="go">hungry caterpillar<br>tap to start</div>
+</div>
 <script>
 var W=240,H=250,S=10,COLS=24,ROWS=25;
 var c=document.getElementById('g'),x=c.getContext('2d');
